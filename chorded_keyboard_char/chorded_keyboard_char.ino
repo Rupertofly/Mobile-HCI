@@ -15,7 +15,7 @@
 *********************************************************************/
 
 #include "keyboardSetup.h"
-String KEYBOARD_NAME = "task2Keyboard";
+String KEYBOARD_NAME = "RupertM_Keyboard";
 
 const char keyMap[64] = {'0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
                          'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
@@ -66,7 +66,7 @@ void setup(void)
   pinMode(button5, INPUT_PULLUP);
   pinMode(LEDpin, OUTPUT);
   digitalWrite(LEDpin, HIGH);
-  
+
 }
 
 

@@ -17,128 +17,63 @@
 #include "keyboardSetup.h"
 String KEYBOARD_NAME = "RupertM_Keyboard";
 
-const char keyMap[64] = {'0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
-                         'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
-                         'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ';', 'P', 'Q',
-                         'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ',
-                         '.', ',', '?', '!', '/', '(', ')'
-                        };
+const int pin_gLED = 2;
+const int pin_rLED = 3;
+const int pin_but5_1 = 5;
+const int pin_but1_1 = 6;
+const int pin_but1_2 = A2;
+const int pin_but2_1 = 10;
+const int pin_but2_2 = A1;
+const int pin_but3_1 = 11;
+const int pin_but3_2 = A0;
+const int pin_but4_1 = 12;
+const int pin_but4_2 = 13;
 
-// pin settings
-const int button0 = 6;
-const int button1 = 5;
-const int button2 = 10;
-const int button3 = 11;
-const int button4 = 12;
-const int button5 = 13;
-const int LEDpin = -1;
-String cSend_char = "A";
 
-// variables to control button repeat
-byte lastButtonState = B000000;
-// delay time in milliseconds before button press is counted
-const int keyPressDelay = 200;
-// the last time the buttons were pressed
-long timeOfLastKeyPress = 0;
-// the time in milliseconds before auto repeat
-const int autoRepeatTime = 2000;
-
-//
-// Setup the system - run once
-//
-void setup(void)
-{
-  while (!Serial);  // wait for Serial to startup - maybe don't need this?
-  delay(500);
-
-  Serial.begin(115200);
-  Serial.println("Basic Chorded Keyboard");
-  Serial.println("---------------------------------------");
-
-  setupKeyboard(KEYBOARD_NAME);
-
-  // setup pins
-  pinMode(button0, INPUT_PULLUP);
-  pinMode(button1, INPUT_PULLUP);
-  pinMode(button2, INPUT_PULLUP);
-  pinMode(button3, INPUT_PULLUP);
-  pinMode(button4, INPUT_PULLUP);
-  pinMode(button5, INPUT_PULLUP);
-  pinMode(LEDpin, OUTPUT);
-  digitalWrite(LEDpin, HIGH);
+void setup(){
+  Serial.begin(9600);
+  pinMode(pin_gLED, OUTPUT);
+  pinMode(pin_rLED, OUTPUT);
+  pinMode(pin_but5_1, INPUT_PULLUP);
+  pinMode(pin_but1_1, INPUT_PULLUP);
+  pinMode(pin_but2_1, INPUT_PULLUP);
+  pinMode(pin_but3_1, INPUT_PULLUP);
+  pinMode(pin_but4_1, INPUT_PULLUP);
+  pinMode(pin_but1_2, INPUT_PULLUP);
+  pinMode(pin_but2_2, INPUT_PULLUP);
+  pinMode(pin_but3_2, INPUT_PULLUP);
+  pinMode(pin_but4_2, INPUT_PULLUP);
 
 }
-
-
-//
-// Loop the program - run forever
-//
-void loop(void)
-{
-  // button states are represented by 0s and 1s in a binary number
+void loop(){
   byte buttonState = readButtonState();
-  // if the button state has changed wait a short time
-  // this will prevent incomplete chords from being read
-  if (buttonState != lastButtonState) delay(keyPressDelay);
-  // check buttons again - this is considered a valid chord
-  buttonState = readButtonState();
-
-  // the result will be a number between 0 (no buttons pressed) and 63 (all buttons pressed)
-  // This number is used to select a char from the key mapping array
-  if (buttonState > 0) {
-
-    // auto repeat
-    if (buttonState == lastButtonState) {
-      if (millis() - autoRepeatTime > timeOfLastKeyPress) {
-        // send char
-        sendChar(buttonState);
-      }
-    } else {
-      timeOfLastKeyPress = millis();
-      // send char
-      sendChar(buttonState);
-    }
+  boolean b5 = digitalRead(pin_but5_1);
+  Serial.print(buttonState, BIN);
+  Serial.print(" ");
+  Serial.println(!b5);
+  if(b5==0){
+    digitalWrite(pin_gLED, 1);
+    digitalWrite(pin_rLED, 1);
   }
-
-  // remember the button state
-  lastButtonState = buttonState;
+  else{
+    digitalWrite(pin_gLED, 0);
+    digitalWrite(pin_rLED, 0);
+  }
 }
-
-
 byte readButtonState() {
   // start with them all off
-  byte bState = B000000;
+  byte bState = B00000000;
 
   // turn on the bits if the button is being pressed
-  if (digitalRead(button0) == false) bitSet(bState, 0);
-  if (digitalRead(button1) == false) bitSet(bState, 1);
-  if (digitalRead(button2) == false) bitSet(bState, 2);
-  if (digitalRead(button3) == false) bitSet(bState, 3);
-  if (digitalRead(button4) == false) bitSet(bState, 4);
-  if (digitalRead(button5) == false) bitSet(bState, 5);
+  if (digitalRead(pin_but1_1) == false) bitSet(bState, 0);
+  if (digitalRead(pin_but1_2) == false) bitSet(bState, 1);
+  if (digitalRead(pin_but2_1) == false) bitSet(bState, 2);
+  if (digitalRead(pin_but2_2) == false) bitSet(bState, 3);
+  if (digitalRead(pin_but3_1) == false) bitSet(bState, 4);
+  if (digitalRead(pin_but3_2) == false) bitSet(bState, 5);
+  if (digitalRead(pin_but4_1) == false) bitSet(bState, 6);
+  if (digitalRead(pin_but4_2) == false) bitSet(bState, 7);
+
 
   return (bState);
-}
-
-void sendChar(byte buttonState) {
-  cSend_char = String(keyMap[buttonState]);
-  if (cSend_char == ";"){cSend_char = "\b";}
-  Serial.print("Sending Byte: ");
-  Serial.print(buttonState, BIN);
-  Serial.print(" Number: ");
-  Serial.print(buttonState, DEC);
-  Serial.print(", Char: ");
-  Serial.println(keyMap[buttonState]);
-
-  ble.print("AT+BleKeyboard=");
-  ble.println(cSend_char);
-
-  // wait for feedback
-  if ( ble.waitForOK() )
-  {
-    Serial.println("OK!");
-  } else
-  {
-    Serial.println("FAILED!");
-  }
 }

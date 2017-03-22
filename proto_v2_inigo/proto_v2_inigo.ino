@@ -28,6 +28,7 @@ const int pin_but3_1 = 11;
 const int pin_but3_2 = A0;
 const int pin_but4_1 = 12;
 const int pin_but4_2 = 13;
+byte but_vals[4];
 
 
 void setup(){
@@ -46,11 +47,16 @@ void setup(){
 
 }
 void loop(){
+  long loop_start = millis();
   byte buttonState = readButtonState();
+  int output_int = convert_button(buttonState);
   boolean b5 = digitalRead(pin_but5_1);
-  Serial.print(buttonState, BIN);
+  Serial.print(output_int);
+
   Serial.print(" ");
-  Serial.println(!b5);
+  Serial.print(!b5);
+  Serial.print(" ");
+  Serial.println(millis()-loop_start);
   if(b5==0){
     digitalWrite(pin_gLED, 1);
     digitalWrite(pin_rLED, 1);
@@ -76,4 +82,18 @@ byte readButtonState() {
 
 
   return (bState);
+}
+
+int convert_button(byte b){
+  byte out_v[4];
+  for(int i = 0; i < 4;i++){
+    int pos = i*2;
+    byte exb;
+    bitWrite(exb,0,bitRead(b,pos));
+    bitWrite(exb,1,bitRead(b,pos+1));
+    if(exb==3) exb=2;
+    but_vals[i] = exb;
+  }
+  int but_int_val = (but_vals[0]+(but_vals[1]*3)+(but_vals[2]*9)+(but_vals[3]*27));
+  return (but_int_val);
 }

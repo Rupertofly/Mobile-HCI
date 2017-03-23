@@ -64,7 +64,7 @@ void setup() {
 void loop() {
   long loop_start = millis();
   byte buttonState = readButtonState();
-  delay(75);
+  delay(500);
   int output_int = convert_button(buttonState);
   if (output_int == 0 && z_receive == false) z_receive = true;
   if (read_pos > 2) read_pos = 0;
@@ -76,24 +76,30 @@ void loop() {
         break;
       case 1:
         out_val[1] = output_int;
-        if (out_val[0] == out_val[1] && out_val[0] != 0) {
+        if (out_val[0] <= out_val[1] && out_val[0] != 0) {
           read_pos++;
         } else {
           read_pos = 0;
+          memset(out_val,0,3);
         }
         break;
       case 2:
         out_val[2] = output_int;
-        if (out_val[1] == out_val[2] && out_val != 0) {
+        if (out_val[1] <= out_val[2] && out_val != 0) {
           send_key = true;
           send_val = out_val[2];
           read_pos = 0;
-        } else {
+          memset(out_val,0,3);
+        } else if(out_val[1] >= out_val[2] && out_val != 0) {
+          send_key = true;
+          send_val = out_val[1];
           read_pos = 0;
+          memset(out_val,0,3);
         }
         break;
       default:
         read_pos = 0;
+        memset(out_val,0,3);
         break;
     }
   }

@@ -31,16 +31,22 @@ const int pin_but4_1 = 12;
 const int pin_but4_2 = 13;
 byte but_vals[4];
 byte out_val[3];
-byte read_pos = 0;
+byte loop_since = 0;
+byte high_val = 0;
 boolean send_key = false;
 int send_val;
 boolean z_receive = true;
+boolean receiving = false;
 
-const char keyMap[64] = {'0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
-                         'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
-                         'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ';', 'P', 'Q',
-                         'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ',
-                         '.', ',', '?', '!', '/', '(', ')'
+const char keyMap[81] = {'0', 'a', 'e', 'i', 0x08, 'n', 'o', 's', ' ', 'u',
+                         't', 'h', 'r', '?', 'y', 'd', ',', 'm', '.', 'g',
+                         'p', 'c', 'f', 0x21, 'l', 'w', 0x0A, 'x', '~', '~',
+                         '~', '~', '~', '~', '~', '~', 'v', '~', '~', 'j',
+                         '~', '~', '~', '~', '~', '~', '~', '~', '~', '~',
+                         '~', '~', '~', '~', 'q', '~', 'z', '~', '~', '~',
+                         '~', '~', '~', '~', '~', '~', '~', '~', '~', '~',
+                         '~', '~', 'b', '~', '~', '~', '~', '~', 'k', '~',
+                         '~'
                         };
 
 
@@ -64,75 +70,53 @@ void setup() {
 void loop() {
   long loop_start = millis();
   byte buttonState = readButtonState();
-  delay(500);
-  int output_int = convert_button(buttonState);
-  if (output_int == 0 && z_receive == false) z_receive = true;
-  if (read_pos > 2) read_pos = 0;
-  if (z_receive) {
-    switch (read_pos) {
-      case 0:
-        out_val[0] = output_int;
-        read_pos++;
-        break;
-      case 1:
-        out_val[1] = output_int;
-        if (out_val[0] <= out_val[1] && out_val[0] != 0) {
-          read_pos++;
-        } else {
-          read_pos = 0;
-          memset(out_val,0,3);
-        }
-        break;
-      case 2:
-        out_val[2] = output_int;
-        if (out_val[1] <= out_val[2] && out_val != 0) {
-          send_key = true;
-          send_val = out_val[2];
-          read_pos = 0;
-          memset(out_val,0,3);
-        } else if(out_val[1] >= out_val[2] && out_val != 0) {
-          send_key = true;
-          send_val = out_val[1];
-          read_pos = 0;
-          memset(out_val,0,3);
-        }
-        break;
-      default:
-        read_pos = 0;
-        memset(out_val,0,3);
-        break;
+  delay(50);
+  byte output_b = convert_button(buttonState);
+  if (output_b == 0 && z_receive == false){
+    z_receive = true;
+    loop_since = 0;
+  }
+  if (output_b != 0 && z_receive) receiving = true;
+  if (loop_since <5&&receiving){
+    if (key_check(output_b)) {
+      send_key = true;
+      send_val = high_val;
+      high_val = 0;
+      receiving = 0;
     }
   }
   if (send_key && z_receive) {
     Serial.print(String(send_val) + " ");
     send_key = false;
     z_receive = false;
-    c_send = String(keyMap[send_val]);
-    digitalWrite(pin_gLED, 1);
-    ble.print("AT+BleKeyboard=");
-    ble.println(c_send);
+    if(keyMap[send_val] != '~'){
+      c_send = String(keyMap[send_val]);
+      digitalWrite(pin_gLED, 1);
+      ble.print("AT+BleKeyboard=");
+      ble.println(c_send);
 
-    if ( ble.waitForOK() )
-    {
-      digitalWrite(pin_gLED, 0);
-    }  else
-    {
-      digitalWrite(pin_gLED, 0);
-      digitalWrite(pin_rLED, 1);
-      delay(50);
-      digitalWrite(pin_rLED, 0);
+      if ( ble.waitForOK() )
+      {
+        digitalWrite(pin_gLED, 0);
+      }  else
+      {
+        digitalWrite(pin_gLED, 0);
+        digitalWrite(pin_rLED, 1);
+        delay(50);
+        digitalWrite(pin_rLED, 0);
+      }
     }
   } else {
     Serial.print("0 ");
   }
 
   boolean b5 = digitalRead(pin_but5_1);
-  Serial.print(output_int);
+  Serial.print(output_b);
 
   Serial.print(" ");
   Serial.print(!b5);
   Serial.print(" ");
-  Serial.print(String(read_pos) + " ");
+  Serial.print(String(loop_since) + " ");
 
 
   Serial.println(millis() - loop_start);
@@ -175,4 +159,19 @@ int convert_button(byte b) {
   }
   int but_int_val = (but_vals[0] + (but_vals[1] * 3) + (but_vals[2] * 9) + (but_vals[3] * 27));
   return (but_int_val);
+}
+
+boolean key_check(byte key){
+  if (key!=0){
+    if (key > high_val){
+      high_val = key;
+    }
+  }
+  if(loop_since >= 4){
+    return true;
+    //loop_since=0;
+  } else {
+    loop_since++;
+    return false;
+  }
 }

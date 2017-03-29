@@ -52,7 +52,7 @@ const char keyMap[81] = {'0', 'a', 'e', 'i', 0x08, 'n', 'o', 's', ' ', 'u',
 
 
 void setup() {
-  Serial.begin(9600);
+  //Serial.begin(9600);
   setupKeyboard(KEYBOARD_NAME);
   pinMode(pin_gLED, OUTPUT);
   pinMode(pin_rLED, OUTPUT);
@@ -86,7 +86,7 @@ void loop() {
     }
   }
   if (send_key && z_receive) {
-    Serial.print(String(send_val) + " ");
+    //Serial.print(String(send_val) + " ");
     send_key = false;
     z_receive = false;
     if(keyMap[send_val] != '~'){
@@ -111,15 +111,15 @@ void loop() {
   }
 
   boolean b5 = digitalRead(pin_but5_1);
-  Serial.print(output_b);
+  //Serial.print(output_b);
 
-  Serial.print(" ");
-  Serial.print(!b5);
-  Serial.print(" ");
-  Serial.print(String(loop_since) + " ");
+  //Serial.print(" ");
+  //Serial.print(!b5);
+  //Serial.print(" ");
+  //Serial.print(String(loop_since) + " ");
 
 
-  Serial.println(millis() - loop_start);
+  //Serial.println(millis() - loop_start);
 
 
   if (b5 == 0) {

@@ -48,7 +48,7 @@ int i_send;
 //Key Map
 const char ca_map[81] = {'0', 'a', 'e', 'i', 0x08, 'n', 'o', 's', ' ', 'u',
                          't', 'h', 'r', '?', 'y', 'd', ',', 'm', '.', 'g',
-                         'p', 'c', 'f', 0x21, 'l', 'w', 0x0A, 'x', '~', '~',
+                         'p', 'c', 'f', 0x21, 'l', 'w', '[', 'x', '~', '~',
                          '~', '~', '~', '~', '~', '~', 'v', '~', '~', 'j',
                          '~', '~', '~', '~', '~', '~', '~', '~', '~', '~',
                          '~', '~', '~', '~', 'q', '~', 'z', '~', '~', '~',
@@ -100,7 +100,17 @@ void loop() {
     b_send = false; //reset send values
     b_zero = false;
     if(ca_map[i_send] != '~'){ //if character is not a ~ (placeholder invalid)
-      c_send = String(ca_map[i_send]); //set output character to corresponding character
+      switch (ca_map[i_send]){
+        case '[':
+          c_send = "\r";
+          break;
+        case '?':
+          c_send = "\?";
+          break;
+        default:
+          c_send = String(ca_map[i_send]); //set output character to corresponding character
+          break;
+      }
       digitalWrite(i_pin_gLED, 1); //flash green to signify send
       ble.print("AT+BleKeyboard="); //write character to bluetooth
       ble.println(c_send);
@@ -140,9 +150,9 @@ int convert_button(byte _y_b) { //convert binary into a number index number
   for (int i = 0; i < 4; i++) {
     int i_pos = i * 2;
     byte y_exb;
-    bitWrite(exb, 0, bitRead(_y_b, i_pos));
-    bitWrite(exb, 1, bitRead(_y_b, i_pos + 1));
-    if (exb == 3) y_exb = 2;
+    bitWrite(y_exb, 0, bitRead(_y_b, i_pos));
+    bitWrite(y_exb, 1, bitRead(_y_b, i_pos + 1));
+    if (y_exb == 3) y_exb = 2;
     ya_vals[i] = y_exb;
   }
   int but_int_val = (ya_vals[0] + (ya_vals[1] * 3) + (ya_vals[2] * 9) + (ya_vals[3] * 27));
@@ -151,7 +161,7 @@ int convert_button(byte _y_b) { //convert binary into a number index number
 
 boolean key_check(byte _y_key){ //check whether current value is higher then previous values, and increment loop count
   if (_y_key!=0){
-    if (key > y_high){
+    if (_y_key > y_high){
       y_high = _y_key;
     }
   }

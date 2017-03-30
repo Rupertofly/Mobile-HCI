@@ -100,16 +100,12 @@ void loop() {
     b_send = false; //reset send values
     b_zero = false;
     if(ca_map[i_send] != '~'){ //if character is not a ~ (placeholder invalid)
-      switch (ca_map[i_send]){
-        case '[':
-          c_send = "\r";
-          break;
-        case '?':
-          c_send = "\?";
-          break;
-        default:
-          c_send = String(ca_map[i_send]); //set output character to corresponding character
-          break;
+      if (ca_map[i_send] == '['){
+        c_send = "\\r";
+      } else if (ca_map[i_send] == '?'){
+        c_send = "\\?";
+      } else {
+        c_send = String(ca_map[i_send]); //set output character to corresponding character
       }
       digitalWrite(i_pin_gLED, 1); //flash green to signify send
       ble.print("AT+BleKeyboard="); //write character to bluetooth
